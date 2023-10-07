@@ -3,6 +3,8 @@ import pandas as pd
 import numpy as np
 from geopy.distance import geodesic
 import folium as fp
+from streamlit_folium import folium_static
+
 
 
 
@@ -30,12 +32,12 @@ def main():
         st.dataframe(df.head())
 
 
-    if 'my_dframe1' not in st.session_state:
-        st.session_state.my_dframe1 = pd.DataFrame()
-    if 'my_dframe2' not in st.session_state:
-        st.session_state.my_dframe2 = pd.DataFrame()
-    if 'my_dframe3' not in st.session_state:
-        st.session_state.my_dframe3 = pd.DataFrame()
+    # if 'my_dframe1' not in st.session_state:
+    #     st.session_state.my_dframe1 = pd.DataFrame()
+    # if 'my_dframe2' not in st.session_state:
+    #     st.session_state.my_dframe2 = pd.DataFrame()
+    # if 'my_dframe3' not in st.session_state:
+    #     st.session_state.my_dframe3 = pd.DataFrame()
 
     if choice == '1.distinguish attributes':
         # assigning heading to the choice
@@ -137,7 +139,7 @@ def main():
         rdf = df[df['Latitude'] != 0]
         df['int_speed'] = df.apply(lambda row: float(row['Speed'][:-4]), axis=1)
         fdf = df[df['int_speed'] > 50]
-        options = st.sidebar.selectbox("Select an option", ["overspeed_map", "Remove duplicate values", "Speed"])  
+        options = st.sidebar.selectbox("Select an option", ["overspeed_map", "Total coordinates map"  , "Day wise maps" , "compare maps"])  
         rdf = df[df['Latitude'] != 0]
 
         if options == "overspeed_map":
@@ -156,7 +158,121 @@ def main():
                     popup=f"speed: {row['int_speed']}",  # Customize the popup as needed
                 ).add_to(fm)
 
-            st.write(fm)
+            folium_static(fm)
+
+        if options == "Total coordinates map":
+            coordinates = list(zip(rdf['Latitude'], rdf['Longitude']))
+
+            # Create a Folium map
+            n = fp.Map(location=[16.9891, 82.2475], zoom_start=12)
+
+            # Create a PolyLine with the given coordinates (color is blue)
+
+            # Add CircleMarkers along the PolyLine path
+            for coord in coordinates:
+                fp.CircleMarker(
+                    location=coord,
+                    radius=5,
+                    color='blue',  # Change this color as needed
+                    fill=True,
+                    fill_color='blue',  # Change this color as needed
+                    fill_opacity=0.7,
+                ).add_to(n)
+
+            # Display the map
+            folium_static(n)
+
+        if options == "Day wise maps":
+            rdf[['date', 'time']] = rdf['Time'].str.split(' ', expand=True)
+            unique_dates = rdf['date'].unique()
+            l = []
+            date_dataframes = {}  # Create a dictionary to store DataFrames
+
+            for date in unique_dates:
+                z = date[:10].replace('-', "_")
+                l.append(z)
+                date_dataframes[z] = rdf[rdf['date'] == date].copy()  # Store DataFrame in the dictionary
+
+            selected_dates = st.multiselect("Select Dates", l)
+
+            selected_dataframes = [date_dataframes[date] for date in selected_dates]
+
+            if selected_dataframes:
+                st.write("Selected Dataframes:")
+                for i in selected_dataframes:
+                    daydf=i
+                    zipped = list(zip(daydf['Latitude'], daydf['Longitude']))
+                    d = fp.Popup('daydf', parse_html=True)
+                    map = fp.Map(location=[16.9891, 82.2475], zoom_start=12)
+                    fp.PolyLine(locations=zipped, color='blue' ,popup = d).add_to(map)
+                    folium_static(map)
+
+            else:
+                st.write("No dates selected.")
+
+        # if options == "compare maps":
+        #     rdf[['date', 'time']] = rdf['Time'].str.split(' ', expand=True)
+        #     unique_dates = rdf['date'].unique()
+        #     l = []
+        #     date_dataframes = {}  # Create a dictionary to store DataFrames
+
+        #     for date in unique_dates:
+        #         z = date[:10].replace('-', "_")
+        #         l.append(z)
+        #         date_dataframes[z] = rdf[rdf['date'] == date].copy()  # Store DataFrame in the dictionary
+
+        #     selected_dates = st.multiselect("Select Dates", l)
+
+        #     if selected_dates:
+        #         st.sidebar.write("Selected Maps:")
+        #         map = fp.Map(location=[16.9891, 82.2475], zoom_start=12)  # Create a single map
+        #         colors = ['blue', 'red', 'green', 'purple', 'orange', 'black',"pink","yellow","violet","indigo"]  # List of colors
+                
+        #         for i, date in enumerate(selected_dates):
+        #             daydf = date_dataframes[date]
+        #             zipped = list(zip(daydf['Latitude'], daydf['Longitude']))
+                    
+        #             # Use a unique color for each DataFrame
+        #             color_index = i % len(colors)
+        #             color = colors[color_index]
+                    
+        #             fp.PolyLine(locations=zipped, color=color).add_to(map)  # Add polyline with unique color
+        #             st.sidebar.write(f"Map for {date}")
+                
+        #         folium_static(map)  # Display the single map with all polylines
+        #     else:
+        #         st.write("No dates selected.")
+        if options == "compare maps":
+            rdf[['date', 'time']] = rdf['Time'].str.split(' ', expand=True)
+            unique_dates = rdf['date'].unique()
+            l = []
+            date_dataframes = {}  # Create a dictionary to store DataFrames
+
+            for date in unique_dates:
+                z = date[:10].replace('-', "_")
+                l.append(z)
+                date_dataframes[z] = rdf[rdf['date'] == date].copy()  # Store DataFrame in the dictionary
+
+            selected_dates = st.multiselect("Select Dates", l)
+
+            if selected_dates:
+                st.sidebar.write("Selected Maps:")
+                map = fp.Map(location=[16.9891, 82.2475], zoom_start=12)  # Create a single map
+                colors = ['blue', 'red', 'green', 'purple', 'orange', 'black', "pink","yellow","violet","brown"]  # List of colors
+                
+                # Create a list to store names and colors
+                names_and_colors = [(date, colors[i % len(colors)]) for i, date in enumerate(selected_dates)]
+                
+                for date, color in names_and_colors:
+                    daydf = date_dataframes[date]
+                    zipped = list(zip(daydf['Latitude'], daydf['Longitude']))
+                    
+                    fp.PolyLine(locations=zipped, color=color).add_to(map)  # Add polyline with unique color
+                    st.sidebar.write(f"Map for {date} (Color: {color})")
+                
+                folium_static(map)  # Display the single map with all polylines
+            else:
+                st.write("No dates selected.")
 
 
                         
