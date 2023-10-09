@@ -28,13 +28,6 @@ def main():
             df = pd.read_excel(data)
         st.dataframe(df.head())
 
-    # if 'my_dframe1' not in st.session_state:
-    #     st.session_state.my_dframe1 = pd.DataFrame()
-    # if 'my_dframe2' not in st.session_state:
-    #     st.session_state.my_dframe2 = pd.DataFrame()
-    # if 'my_dframe3' not in st.session_state:
-    #     st.session_state.my_dframe3 = pd.DataFrame()
-
     if choice == '1.distinguish attributes':
         st.subheader(" Distinguishing attributes  :1234:")
         da_tasks = ("Show Shape","Show Columns","Summary","Show Selected Columns","show numerical variables","show categorical variables","percentage distribution of unique values in fields")
@@ -283,8 +276,9 @@ def main():
                                     entry = row['Time']
                                 exit = row['Time']
                         if entry and exit:
-                            time_difference = exit - entry
-                            st.write(f"{period} Entry Point: {entry}\n{period} Exit Point: {exit}\nTime Difference: {time_difference}\n")
+                            dafr = (f"{period} Entry Point: {entry}\n{period} Exit Point: {exit}\n")
+                            dafr.split()
+                            st.write(dafr)
 
 
 
