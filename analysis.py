@@ -256,16 +256,16 @@ def main():
                     return 6371 * 2 * atan2(sqrt(a), sqrt(1 - a))
                 
                 circle_centers = {
-                    "Junior College": (16.972599268499, 82.24037203701558, 1.0), 
-                    "Surampalem": (17.089768812937248, 82.06717500416023, 1.0), 
                     "Pitapuram": (17.12069941663565, 82.25250466805956, 1.0),
+                    "Junior College": (16.972599268499, 82.24037203701558, 1.0), 
+                    "Surampalem": (17.089768812937248, 82.06717500416023, 1.0),    
                 }
 
                 daydf['Time'] = pd.to_datetime(daydf['Time'])
 
                 for name, center in circle_centers.items():
                     center_latitude, center_longitude, radius = center
-                    st.write(f"Center: {name}")
+                    st.write('<span style="color: orange;">Centre:</span>',f'<span style="color: white;">{name}</span>', unsafe_allow_html=True)
 
                     for period, df in [("AM", daydf[daydf['Time'].dt.hour < 12]), ("PM", daydf[daydf['Time'].dt.hour >= 12])]:
                         entry, exit = None, None
@@ -276,14 +276,10 @@ def main():
                                     entry = row['Time']
                                 exit = row['Time']
                         if entry and exit:
-                            dafr = (f"{period} Entry Point: {entry}\n{period} Exit Point: {exit}\n")
-                            dafr.split()
-                            st.write(dafr)
-
-
-
-    
-
-                        
+                            # entry = (f"{entry}")
+                            # exit  = (f"{exit} {period}")
+                            st.write('<span style="color: aqua;">Entry Point:  </span>',f'<span style="color: yellow;"> {entry}</span>',f'<span style="color: orange;">{period}</span>', unsafe_allow_html=True)
+                            st.write('<span style="color: white;">Exit Point:  </span>',f'<span style="color: skyblue;"> {exit}</span>',f'<span style="color: lightgreen;">{period}</span>', unsafe_allow_html=True)
+                      
 if __name__ == '__main__':
     main()
