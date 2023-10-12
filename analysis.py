@@ -27,6 +27,7 @@ def main():
         else:
             df = pd.read_excel(data)
         st.dataframe(df.head())
+        st.dataframe(df)
 
     if choice == '1.distinguish attributes':
         st.subheader(" Distinguishing attributes  :1234:")
@@ -90,6 +91,19 @@ def main():
 
     if choice == "3.Speed":
             rdf = df[df['Latitude'] != 0]
+            rdf[['date', 'time']] = rdf['Time'].str.split(' ', expand=True)
+            unique_dates = rdf['date'].unique()
+            l = []
+            date_dataframes = {}  
+            for date in unique_dates:
+                z = date[:10].replace('-', "_")
+                l.append(z)
+                date_dataframes[z] = rdf[rdf['date'] == date].copy()  
+            selected_dates = st.multiselect("Select Dates", l)
+            if selected_dates: 
+                st.write("Selected Dataframe:")
+                selected_date = selected_dates[-1] 
+                rdf = date_dataframes[selected_date]
             rdf['int_speed'] = rdf.apply(lambda row: float(row['Speed'][:-4]), axis=1)
             st.subheader(" Average Speed")
             st.write(rdf.int_speed.mean())
@@ -260,21 +274,48 @@ def main():
                     "Junior College": (16.972599268499, 82.24037203701558, 1.0), 
                     "Surampalem": (17.089768812937248, 82.06717500416023, 1.0),    
                 }
-
+                circle_centers1 = {
+                    "Surampalem": (17.089768812937248, 82.06717500416023, 1.0),
+                    "Junior College": (16.972599268499, 82.24037203701558, 1.0), 
+                    "Pitapuram": (17.12069941663565, 82.25250466805956, 1.0),    
+                }
+                st.subheader("ForeNoon")
                 daydf['Time'] = pd.to_datetime(daydf['Time'])
-
                 for name, center in circle_centers.items():
                     center_latitude, center_longitude, radius = center
                     st.write('<span style="color: orange;">Centre:</span>',f'<span style="color: white;">{name}</span>', unsafe_allow_html=True)
-
-                    for period, df in [("AM", daydf[daydf['Time'].dt.hour < 12]), ("PM", daydf[daydf['Time'].dt.hour >= 12])]:
+                    
+                    for period, df in [("AM", daydf[daydf['Time'].dt.hour < 12])]:
                         entry, exit = None, None
                         for _, row in df.iterrows():
                             dist = haversine(center_latitude, center_longitude, row['Latitude'], row['Longitude'])
                             if dist <= radius:
                                 if entry is None:
                                     entry = row['Time']
+                                    entry=str(entry)[11:]
                                 exit = row['Time']
+                                exit=str(exit)[11:]
+                        if entry and exit:
+                            # entry = (f"{entry}")
+                            # exit  = (f"{exit} {period}")
+                            
+                            st.write('<span style="color: aqua;">Entry Point:  </span>',f'<span style="color: yellow;"> {entry}</span>',f'<span style="color: orange;">{period}</span>', unsafe_allow_html=True)
+                            st.write('<span style="color: white;">Exit Point:  </span>',f'<span style="color: skyblue;"> {exit}</span>',f'<span style="color: lightgreen;">{period}</span>', unsafe_allow_html=True)
+                st.subheader("AfterNoon")
+                for name, center in circle_centers1.items():
+                    center_latitude, center_longitude, radius = center
+                    st.write('<span style="color: orange;">Centre:</span>',f'<span style="color: white;">{name}</span>', unsafe_allow_html=True)
+
+                    for period, df in [("PM", daydf[daydf['Time'].dt.hour > 12])]:
+                        entry, exit = None, None
+                        for _, row in df.iterrows():
+                            dist = haversine(center_latitude, center_longitude, row['Latitude'], row['Longitude'])
+                            if dist <= radius:
+                                if entry is None:
+                                    entry = row['Time']
+                                    entry=str(entry)[11:]
+                                exit = row['Time']
+                                exit=str(exit)[11:]
                         if entry and exit:
                             # entry = (f"{entry}")
                             # exit  = (f"{exit} {period}")
