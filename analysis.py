@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import math
 from geopy.distance import geodesic
 import folium as fp
 from streamlit_folium import folium_static
@@ -27,7 +28,7 @@ def main():
         else:
             df = pd.read_excel(data)
         st.dataframe(df.head())
-        st.dataframe(df)
+        
 
     if choice == '1.distinguish attributes':
         st.subheader(" Distinguishing attributes  :1234:")
@@ -107,8 +108,10 @@ def main():
             rdf['int_speed'] = rdf.apply(lambda row: float(row['Speed'][:-4]), axis=1)
             st.subheader(" Average Speed")
             st.write(rdf.int_speed.mean())
+            min_speed = rdf[(rdf['int_speed'] > 0) & (rdf['int_speed'] < rdf['int_speed'].max())]['int_speed'].min()
             st.subheader(" Min Speed")
-            st.write(rdf.int_speed.min())
+            st.write(min_speed)
+
             st.subheader(" Max Speed")
             st.write(rdf.int_speed.max())
             st.subheader(" Total Distance")
@@ -204,22 +207,75 @@ def main():
             else:
                 st.write("No dates selected.")
         
+      
         if options == "Bus standby":
-            sdf=rdf['Attributes'].str.split(' ',expand=True)
-            rdf=pd.concat([rdf,sdf[6]],axis=1)
-            rdf[6] = rdf.apply(lambda row: str(row[6][9:]), axis=1)
-            xdf = rdf[(rdf[6] == 'true')& (df['int_speed'] == 0) ]
-            m1 = fp.Map(location=[16.9891, 82.2475], zoom_start=12)
-            for index, row in xdf.iterrows():
-                fp.CircleMarker(
-                    location=[row['Latitude'], row['Longitude']],
-                    radius=3,  
-                    color='red',
-                    fill=True,
-                    fill_color='red',
-                    fill_opacity=1.0, 
-                    popup=f"Day: {row['int_speed']}<br>ignition: {row[6]}").add_to(m1)
-            folium_static(m1)
+                data = rdf
+                data['Time'] = pd.to_datetime(data['Time'])
+                data['Attributes'] = data['Attributes'].str.split(' ')
+                split_data = []
+                for row in data['Attributes']:
+                    split_dict = {}
+                    for item in row:
+                        key_value = item.split('=')
+                        if len(key_value) == 2:
+                            key, value = key_value
+                            split_dict[key] = value
+                    split_data.append(split_dict)
+                split_data_df = pd.DataFrame(split_data)
+                data = pd.concat([data, split_data_df], axis=1)
+                data.drop(columns=['Attributes'], inplace=True)
+                data['totalDistance'] = data['totalDistance'].astype(float)
+                data['Speed'] = data['Speed'].str.split(' ', n=1, expand=True)[0]
+                data['Speed'].fillna(0, inplace=True)
+                data['Speed'] = data['Speed'].astype(float)
+                user_date = st.date_input("Date: ")
+                user_date = user_date.strftime('%Y-%m-%d')
+                df = data[data['Time'].dt.strftime('%Y-%m-%d') == user_date]
+
+                df_copy = df.copy()
+                df_copy.drop(columns={'Altitude', 'priority', 'sat', 'event', 'rssi', 'io200', 'io69', 'pdop', 'hdop', 'power',
+                                    'battery', 'io68', 'odometer','totalDistance','distance','motion','hours'}, inplace=True)
+                df_copy['ignition'] = df_copy['ignition'].map({'true': True, 'false': False})
+                df_copy['time'] = df_copy['Time'].diff()
+                threshold = pd.Timedelta(minutes=5).total_seconds()
+
+                df_stops_start = df_copy[(df_copy['ignition'] == True) & (df_copy['Speed'] == 0) & (df_copy['time'].dt.total_seconds() > threshold)]
+                df_stops_stop = df_copy[(df_copy['ignition'] == False) & (df_copy['Speed'] == 0) & (df_copy['time'].dt.total_seconds() > threshold)]
+
+                intervals = []
+                start_idx = None
+                in_interval = False
+                total_hours = 0
+                for idx, row in df_copy.iterrows():
+                    if row['Speed'] == 0 and row['ignition'] == True:
+                        if not in_interval:
+                            start_idx = idx
+                            in_interval = True
+                    elif in_interval and row['Speed'] == 0 and row['ignition'] == False:
+                        intervals.append(df_copy.loc[start_idx:idx])
+                        in_interval = False
+                        total_hours += df_copy.loc[start_idx:idx]['time'].sum().total_seconds() / 3600
+
+                df_first = pd.DataFrame(intervals[0])
+                df_last = pd.DataFrame(intervals[-1])
+                lat_first = df_first.iloc[0, 2]
+                log_first = df_first.iloc[0, 3]
+                if not df_first.empty:
+
+                    ignition_map = fp.Map(location=[lat_first, log_first], zoom_start=13)
+                    for idx, row in df_stops_start.iterrows():
+                        lat = row['Latitude']
+                        log = row['Longitude']
+                        popupcontent = f"<strong> time stayed:{row['time']}</strong>"
+                        fp.Marker(location=[lat, log], icon=fp.Icon(color='orange'), popup=popupcontent).add_to(ignition_map)
+                    for idx, row in df_stops_stop.iterrows():
+                        lat = row['Latitude']
+                        log = row['Longitude']
+                        popupcontent = f"<strong> time stayed:{row['time']}</strong>"
+                        fp.Marker(location=[lat, log], icon=fp.Icon(color='blue'), popup=popupcontent).add_to(ignition_map)
+                    folium_static(ignition_map)
+                else:
+                    st.warning("Bus aagaledu amma")
 
         if options == "Geo Fence":
             radius = st.text_input("Enter Radius (in meters):")
@@ -243,6 +299,8 @@ def main():
                 else:
                     fp.CircleMarker(location=[row['Latitude'], row['Longitude']], radius=5, color='blue', fill=True, fill_color='blue', fill_opacity=0.7, popup=f"Coordinates : {row['Address']}").add_to(m)
             folium_static(m)
+
+
 
     elif choice == "5.Entry & Exit points":
             rdf = df[df['Latitude'] != 0]
