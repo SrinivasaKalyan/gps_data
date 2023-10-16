@@ -1,11 +1,10 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import math
 from geopy.distance import geodesic
 import folium as fp
 from streamlit_folium import folium_static
-from shapely.geometry import Point, Polygon
+from shapely.geometry import Point
 import geopandas as gpd
 from math import radians, sin, cos, sqrt, atan2
 
@@ -26,9 +25,15 @@ def main():
         if file_format == 'csv':
             df = pd.read_csv(data)
         else:
-            df = pd.read_excel(data)
+            data = pd.read_excel(data,skiprows=7)
+            df = pd.DataFrame(data)
+            
         st.dataframe(df.head())
-        
+        # df.drop(columns={'Unnamed: 6'}, inplace=True)
+        df.rename(columns={'Unnamed: 0': 'Valid', 'Unnamed: 1': 'Time', 'Unnamed: 2': 'Lat', 'Unnamed: 3': 'Long',
+                                'Unnamed: 5': 'Speed', 'Unnamed: 4': 'Altitude', 'Unnamed: 7': 'attributes'}, inplace=True)
+
+        data.drop(index=[0], inplace=True)
 
     if choice == '1.distinguish attributes':
         st.subheader(" Distinguishing attributes  :1234:")
@@ -130,10 +135,22 @@ def main():
     elif choice == "4.Maps":
         st.subheader(" Maps")
         rdf = df[df['Latitude'] != 0]
-        df['int_speed'] = df.apply(lambda row: float(row['Speed'][:-4]), axis=1)
-        fdf = df[df['int_speed'] > 50]
+        rdf[['date', 'time']] = rdf['Time'].str.split(' ', expand=True)
+        unique_dates = rdf['date'].unique()
+        l = []
+        date_dataframes = {}  
+        for date in unique_dates:
+            z = date[:10].replace('-', "_")
+            l.append(z)
+            date_dataframes[z] = rdf[rdf['date'] == date].copy()  
+        selected_dates = st.multiselect("Select Dates", l)
+        if selected_dates: 
+            st.write("Selected Dataframe:")
+            selected_date = selected_dates[-1] 
+            rdf = date_dataframes[selected_date]
+        rdf['int_speed'] = rdf.apply(lambda row: float(row['Speed'][:-4]), axis=1)
+        fdf = rdf[rdf['int_speed'] > 50]
         options = st.sidebar.selectbox("Select an option", ["overspeed map", "Total coordinates map"  , "Day wise maps" , "compare maps","Bus standby" , "Geo Fence"])  
-        rdf = df[df['Latitude'] != 0]
         if options == "overspeed map":
             fm = fp.Map(location=[16.9891, 82.2475], zoom_start=12)
             for index, row in fdf.iterrows():
