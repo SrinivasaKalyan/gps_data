@@ -149,7 +149,7 @@ def main():
             selected_date = selected_dates[-1] 
             rdf = date_dataframes[selected_date]
         rdf['int_speed'] = rdf.apply(lambda row: float(row['Speed'][:-4]), axis=1)
-        fdf = rdf[rdf['int_speed'] > 50]
+        fdf = rdf[rdf['int_speed'] > 70]
         options = st.sidebar.selectbox("Select an option", ["overspeed map", "Total coordinates map"  , "Day wise maps" , "compare maps","Bus standby" , "Geo Fence"])  
         if options == "overspeed map":
             fm = fp.Map(location=[16.9891, 82.2475], zoom_start=12)
