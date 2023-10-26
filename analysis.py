@@ -303,10 +303,6 @@ def main():
                     else:
                         st.warning("No intervals found for the selected date.")
 
-
-
-
-
         if options == "Geo Fence":
             radius = st.text_input("Enter Radius (in meters):")
             try:
