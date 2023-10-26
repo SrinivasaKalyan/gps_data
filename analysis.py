@@ -134,36 +134,45 @@ def main():
 
     elif choice == "4.Maps":
         st.subheader(" Maps")
+        options = st.sidebar.selectbox("Select an option", ["overspeed map", "Total coordinates map", "Day wise maps", "compare maps", "Bus standby", "Geo Fence"])
         rdf = df[df['Latitude'] != 0]
         rdf[['date', 'time']] = rdf['Time'].str.split(' ', expand=True)
         unique_dates = rdf['date'].unique()
-        l = []
-        date_dataframes = {}  
-        for date in unique_dates:
-            z = date[:10].replace('-', "_")
-            l.append(z)
-            date_dataframes[z] = rdf[rdf['date'] == date].copy()  
-        selected_dates = st.multiselect("Select Dates", l)
-        if selected_dates: 
-            st.write("Selected Dataframe:")
-            selected_date = selected_dates[-1] 
-            rdf = date_dataframes[selected_date]
+        
         rdf['int_speed'] = rdf.apply(lambda row: float(row['Speed'][:-4]), axis=1)
-        fdf = rdf[rdf['int_speed'] > 70]
-        options = st.sidebar.selectbox("Select an option", ["overspeed map", "Total coordinates map"  , "Day wise maps" , "compare maps","Bus standby" , "Geo Fence"])  
+       
+        
         if options == "overspeed map":
-            fm = fp.Map(location=[16.9891, 82.2475], zoom_start=12)
-            for index, row in fdf.iterrows():
-                fp.CircleMarker(
-                    location=[row['Latitude'], row['Longitude']],
-                    radius=5,  
-                    color='red',
-                    fill=True,
-                    fill_color='red',
-                    fill_opacity=1.0, 
-                    popup=f"speed: {row['int_speed']}",  
-                ).add_to(fm)
-            folium_static(fm)
+            overspeed = st.number_input("Overspeed :")
+            fdf = rdf[rdf['int_speed'] > overspeed]
+            unique_dates = rdf['date'].unique()
+            l = []
+            date_dataframes = {}
+            for date in unique_dates:
+                z = date[:10].replace('-', "_")
+                l.append(z)
+                date_dataframes[z] = rdf[rdf['date'] == date].copy()
+            selected_dates = st.multiselect("Select Dates", l)
+     
+            if selected_dates:
+                st.write("Selected Dataframe:")
+                selected_date = selected_dates[-1]
+                daydf = date_dataframes[selected_date]
+                zipped = list(zip(daydf['Latitude'], daydf['Longitude']))
+                d = fp.Popup(selected_date, parse_html=True)
+                fm = fp.Map(location=[16.9891, 82.2475], zoom_start=12)
+                for index, row in fdf.iterrows():
+                    fp.CircleMarker(
+                        location=[row['Latitude'], row['Longitude']],
+                        radius=5,
+                        color='red',
+                        fill=True,
+                        fill_color='red',
+                        fill_opacity=1.0,
+                        popup=f"speed: {row['int_speed']}",
+                    ).add_to(fm)
+                folium_static(fm)
+           
 
         if options == "Total coordinates map":
             coordinates = list(zip(rdf['Latitude'], rdf['Longitude']))
@@ -172,127 +181,131 @@ def main():
                 fp.CircleMarker(
                     location=coord,
                     radius=5,
-                    color='blue',  
+                    color='blue',
                     fill=True,
-                    fill_color='blue',  
+                    fill_color='blue',
                     fill_opacity=0.7,
                 ).add_to(n)
             folium_static(n)
 
         if options == "Day wise maps":
-            rdf[['date', 'time']] = rdf['Time'].str.split(' ', expand=True)
             unique_dates = rdf['date'].unique()
             l = []
-            date_dataframes = {}  
+            date_dataframes = {}
             for date in unique_dates:
                 z = date[:10].replace('-', "_")
                 l.append(z)
-                date_dataframes[z] = rdf[rdf['date'] == date].copy()  
+                date_dataframes[z] = rdf[rdf['date'] == date].copy()
             selected_dates = st.multiselect("Select Dates", l)
-            if selected_dates: 
+     
+            if selected_dates:
                 st.write("Selected Dataframe:")
-                selected_date = selected_dates[-1] 
+                selected_date = selected_dates[-1]
                 daydf = date_dataframes[selected_date]
                 zipped = list(zip(daydf['Latitude'], daydf['Longitude']))
                 d = fp.Popup(selected_date, parse_html=True)
                 m = fp.Map(location=[16.9891, 82.2475], zoom_start=12)
                 fp.PolyLine(locations=zipped, color='blue', popup=d).add_to(m)
-                folium_static(m) 
+                folium_static(m)
+            else:
                 st.write("No dates selected.")
 
         if options == "compare maps":
-            rdf[['date', 'time']] = rdf['Time'].str.split(' ', expand=True)
             unique_dates = rdf['date'].unique()
             l = []
-            date_dataframes = {}  
+            date_dataframes = {}
             for date in unique_dates:
                 z = date[:10].replace('-', "_")
                 l.append(z)
-                date_dataframes[z] = rdf[rdf['date'] == date].copy()  
+                date_dataframes[z] = rdf[rdf['date'] == date].copy()
             selected_dates = st.multiselect("Select Dates", l)
             if selected_dates:
                 st.sidebar.write("Selected Maps:")
-                m = fp.Map(location=[16.9891, 82.2475], zoom_start=12)  
-                colors = ['blue', 'red', 'green', 'purple', 'orange', 'black', "pink","yellow","violet","brown"] 
+                m = fp.Map(location=[16.9891, 82.2475], zoom_start=12)
+                colors = ['blue', 'red', 'green', 'purple', 'orange', 'black', "pink", "yellow", "violet", "brown"]
                 names_and_colors = [(date, colors[i % len(colors)]) for i, date in enumerate(selected_dates)]
                 for date, color in names_and_colors:
                     daydf = date_dataframes[date]
                     zipped = list(zip(daydf['Latitude'], daydf['Longitude']))
-                    fp.PolyLine(locations=zipped, color=color).add_to(m) 
+                    fp.PolyLine(locations=zipped, color=color).add_to(m)
                     st.sidebar.write(f"Map for {date} (Color: {color})")
-                folium_static(m)  
+                folium_static(m)
             else:
                 st.write("No dates selected.")
         
-      
         if options == "Bus standby":
-                data = rdf
-                data['Time'] = pd.to_datetime(data['Time'])
-                data['Attributes'] = data['Attributes'].str.split(' ')
-                split_data = []
-                for row in data['Attributes']:
-                    split_dict = {}
-                    for item in row:
-                        key_value = item.split('=')
-                        if len(key_value) == 2:
-                            key, value = key_value
-                            split_dict[key] = value
-                    split_data.append(split_dict)
-                split_data_df = pd.DataFrame(split_data)
-                data = pd.concat([data, split_data_df], axis=1)
-                data.drop(columns=['Attributes'], inplace=True)
-                data['totalDistance'] = data['totalDistance'].astype(float)
-                data['Speed'] = data['Speed'].str.split(' ', n=1, expand=True)[0]
-                data['Speed'].fillna(0, inplace=True)
-                data['Speed'] = data['Speed'].astype(float)
-                user_date = st.date_input("Date: ")
-                user_date = user_date.strftime('%Y-%m-%d')
-                df = data[data['Time'].dt.strftime('%Y-%m-%d') == user_date]
+                    data = rdf
+                    data['Time'] = pd.to_datetime(data['Time'])
+                    data['Attributes'] = data['Attributes'].str.split(' ')
+                    split_data = []
+                    for row in data['Attributes']:
+                        split_dict = {}
+                        for item in row:
+                            key_value = item.split('=')
+                            if len(key_value) == 2:
+                                key, value = key_value
+                                split_dict[key] = value
+                        split_data.append(split_dict)
+                    split_data_df = pd.DataFrame(split_data)
+                    data = pd.concat([data, split_data_df], axis=1)
+                    data.drop(columns=['Attributes'], inplace=True)
+                    data['totalDistance'] = data['totalDistance'].astype(float)
+                    data['Speed'] = data['Speed'].str.split(' ', n=1, expand=True)[0]
+                    data['Speed'].fillna(0, inplace=True)
+                    data['Speed'] = data['Speed'].astype(float)
 
-                df_copy = df.copy()
-                df_copy.drop(columns={'Altitude', 'priority', 'sat', 'event', 'rssi', 'io200', 'io69', 'pdop', 'hdop', 'power',
-                                    'battery', 'io68', 'odometer','totalDistance','distance','motion','hours'}, inplace=True)
-                df_copy['ignition'] = df_copy['ignition'].map({'true': True, 'false': False})
-                df_copy['time'] = df_copy['Time'].diff()
-                threshold = pd.Timedelta(minutes=5).total_seconds()
+                    user_date = st.date_input("Select a Date:")
+                    user_date = user_date.strftime('%Y-%m-%d')
+                    df = data[data['Time'].dt.strftime('%Y-%m-%d') == user_date]
 
-                df_stops_start = df_copy[(df_copy['ignition'] == True) & (df_copy['Speed'] == 0) & (df_copy['time'].dt.total_seconds() > threshold)]
-                df_stops_stop = df_copy[(df_copy['ignition'] == False) & (df_copy['Speed'] == 0) & (df_copy['time'].dt.total_seconds() > threshold)]
+                    df_copy = df.copy()
+                    df_copy.drop(columns=['Altitude', 'priority', 'sat', 'event', 'rssi', 'io200', 'io69', 'pdop', 'hdop', 'power',
+                                        'battery', 'io68', 'odometer','totalDistance','distance','motion','hours'], inplace=True)
+                    df_copy['ignition'] = df_copy['ignition'].map({'true': True, 'false': False})
+                    df_copy['time'] = df_copy['Time'].diff()
+                    threshold = pd.Timedelta(minutes=5).total_seconds()
 
-                intervals = []
-                start_idx = None
-                in_interval = False
-                total_hours = 0
-                for idx, row in df_copy.iterrows():
-                    if row['Speed'] == 0 and row['ignition'] == True:
-                        if not in_interval:
-                            start_idx = idx
-                            in_interval = True
-                    elif in_interval and row['Speed'] == 0 and row['ignition'] == False:
-                        intervals.append(df_copy.loc[start_idx:idx])
-                        in_interval = False
-                        total_hours += df_copy.loc[start_idx:idx]['time'].sum().total_seconds() / 3600
+                    df_stops_start = df_copy[(df_copy['ignition'] == True) & (df_copy['Speed'] == 0) & (df_copy['time'].dt.total_seconds() > threshold)]
+                    df_stops_stop = df_copy[(df_copy['ignition'] == False) & (df_copy['Speed'] == 0) & (df_copy['time'].dt.total_seconds() > threshold)]
 
-                df_first = pd.DataFrame(intervals[0])
-                df_last = pd.DataFrame(intervals[-1])
-                lat_first = df_first.iloc[0, 2]
-                log_first = df_first.iloc[0, 3]
-                if not df_first.empty:
+                    intervals = []
+                    start_idx = None
+                    in_interval = False
+                    total_hours = 0
+                    for idx, row in df_copy.iterrows():
+                        if row['Speed'] == 0 and row['ignition'] == True:
+                            if not in_interval:
+                                start_idx = idx
+                                in_interval = True
+                        elif in_interval and row['Speed'] == 0 and row['ignition'] == False:
+                            intervals.append(df_copy.loc[start_idx:idx])
+                            in_interval = False
+                            total_hours += df_copy.loc[start_idx:idx]['time'].sum().total_seconds() / 3600
 
-                    ignition_map = fp.Map(location=[lat_first, log_first], zoom_start=13)
-                    for idx, row in df_stops_start.iterrows():
-                        lat = row['Latitude']
-                        log = row['Longitude']
-                        popupcontent = f"<strong> time stayed:{row['time']}</strong>"
-                        fp.Marker(location=[lat, log], icon=fp.Icon(color='orange'), popup=popupcontent).add_to(ignition_map)
-                    for idx, row in df_stops_stop.iterrows():
-                        lat = row['Latitude']
-                        log = row['Longitude']
-                        popupcontent = f"<strong> time stayed:{row['time']}</strong>"
-                        fp.Marker(location=[lat, log], icon=fp.Icon(color='blue'), popup=popupcontent).add_to(ignition_map)
-                    folium_static(ignition_map)
-                else:
-                    st.warning("Bus aagaledu amma")
+                    if intervals:
+                        df_first = pd.DataFrame(intervals[0])
+                        df_last = pd.DataFrame(intervals[-1])
+                        lat_first = df_first.iloc[0, 2]
+                        log_first = df_first.iloc[0, 3]
+
+                        ignition_map = fp.Map(location=[lat_first, log_first], zoom_start=13)
+                        for idx, row in df_stops_start.iterrows():
+                            lat = row['Latitude']
+                            log = row['Longitude']
+                            popupcontent = f"<strong> time stayed: {row['time']}</strong>"
+                            fp.Marker(location=[lat, log], icon=fp.Icon(color='orange'), popup=popupcontent).add_to(ignition_map)
+                        for idx, row in df_stops_stop.iterrows():
+                            lat = row['Latitude']
+                            log = row['Longitude']
+                            popupcontent = f"<strong> time stayed: {row['time']}</strong>"
+                            fp.Marker(location=[lat, log], icon=fp.Icon(color='blue'), popup=popupcontent).add_to(ignition_map)
+                        folium_static(ignition_map)
+                    else:
+                        st.warning("No intervals found for the selected date.")
+
+
+
+
 
         if options == "Geo Fence":
             radius = st.text_input("Enter Radius (in meters):")
