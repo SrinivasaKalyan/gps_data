@@ -21,7 +21,7 @@ def main():
 
 
     
-    df = pd.read_csv("report(5).csv")
+    df = pd.read_excel("report(5).xlsx")
     st.dataframe(df.head())
     # df.drop(columns={'Unnamed: 6'}, inplace=True)
     df.rename(columns={'Unnamed: 0': 'Valid', 'Unnamed: 1': 'Time', 'Unnamed: 2': 'Lat', 'Unnamed: 3': 'Long',
