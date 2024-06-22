@@ -17,23 +17,17 @@ def main():
     EDA_tasks = ["1.distinguish attributes","2.Data Cleaning", "3.Speed","4.Maps","5.Entry & Exit points"]
     choice = st.sidebar.radio("select tasks:", EDA_tasks)
     file_format = st.radio('Select file format:', ('csv', 'excel'), key='file_format')
-    data = st.file_uploader("UPLOAD A DATASET 	:open_file_folder: ")
 
 
 
-    if data:
-        if file_format == 'csv':
-            df = pd.read_csv(data)
-        else:
-            data = pd.read_excel(data,skiprows=7)
-            df = pd.DataFrame(data)
-            
-        st.dataframe(df.head())
-        # df.drop(columns={'Unnamed: 6'}, inplace=True)
-        df.rename(columns={'Unnamed: 0': 'Valid', 'Unnamed: 1': 'Time', 'Unnamed: 2': 'Lat', 'Unnamed: 3': 'Long',
-                                'Unnamed: 5': 'Speed', 'Unnamed: 4': 'Altitude', 'Unnamed: 7': 'attributes'}, inplace=True)
+    
+    df = pd.read_csv("report(5).csv")
+    st.dataframe(df.head())
+    # df.drop(columns={'Unnamed: 6'}, inplace=True)
+    df.rename(columns={'Unnamed: 0': 'Valid', 'Unnamed: 1': 'Time', 'Unnamed: 2': 'Lat', 'Unnamed: 3': 'Long',
+                            'Unnamed: 5': 'Speed', 'Unnamed: 4': 'Altitude', 'Unnamed: 7': 'attributes'}, inplace=True)
 
-        data.drop(index=[0], inplace=True)
+    data.drop(index=[0], inplace=True)
 
     if choice == '1.distinguish attributes':
         st.subheader(" Distinguishing attributes  :1234:")
