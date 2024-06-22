@@ -24,10 +24,10 @@ def main():
 
         
     df = pd.DataFrame(data)
-    # st.dataframe(df.head())
+    
     df.rename(columns={'Unnamed: 0': 'Valid', 'Unnamed: 1': 'Time', 'Unnamed: 2': 'Lat', 'Unnamed: 3': 'Long',
                             'Unnamed: 5': 'Speed', 'Unnamed: 4': 'Altitude', 'Unnamed: 7': 'attributes'}, inplace=True)
-
+    st.dataframe(df.head())
     data.drop(index=[0], inplace=True)
 
     if choice == '1.distinguish attributes':
