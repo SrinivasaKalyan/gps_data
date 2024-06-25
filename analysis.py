@@ -19,7 +19,7 @@ lottie_animation = load_lottie_file("bus.json")
 def main():
     st.set_page_config(layout="wide")
     # st.title("Geo Spatial Insights")
-    st.image("Geo-Spatial-Insights.png", use_column_width=True)  
+    st.image("Geo_Spatial_Insights.png", use_column_width=True)  
     EDA_tasks = ["1.distinguish attributes","2.Data Cleaning", "3.Speed","4.Maps","5.Entry & Exit points","About Creator🧐"]
     choice = st.sidebar.radio("select tasks:", EDA_tasks)
 
