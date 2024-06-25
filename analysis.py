@@ -9,6 +9,8 @@ import geopandas as gpd
 from math import radians, sin, cos, sqrt, atan2
 from folium.plugins import Fullscreen, MiniMap
 import requests
+from streamlit_lottie import st_lottie
+
 
 
 
