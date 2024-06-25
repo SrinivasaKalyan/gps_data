@@ -10,12 +10,12 @@ from math import radians, sin, cos, sqrt, atan2
 from folium.plugins import Fullscreen, MiniMap
 import requests
 from streamlit_lottie import st_lottie
+import json
 
-
-
-
-
-
+def load_lottie_file(filepath: str):
+    with open(filepath, "r") as f:
+        return json.load(f)
+lottie_animation = load_lottie_file("bus.json")
 
 def main():
     st.set_page_config(layout="wide")
@@ -444,8 +444,9 @@ def main():
                     Do check out my [LinkedIn](https://www.linkedin.com/in/kalyan-kanchumarthi-a6320a235/) and [GitHub](https://github.com/SrinivasaKalyan).
                     """)
 
-
-
+  
+    with st.sidebar:
+        st_lottie(lottie_animation, height=200, key="lottie_animation")
 
 
 if __name__ == '__main__':
