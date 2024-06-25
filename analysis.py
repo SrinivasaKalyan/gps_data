@@ -21,7 +21,7 @@ def main():
     # st.title("Geo Spatial Insights")
     st.image("Geo_Spatial_Insights.png", use_column_width=True)  
     with st.sidebar:
-        st_lottie(lottie_animation, height=100, key="lottie_animation")
+        st_lottie(lottie_animation, height=50, key="lottie_animation")
     EDA_tasks = ["1.distinguish attributes","2.Data Cleaning", "3.Speed","4.Maps","5.Entry & Exit points","About Creator🧐"]
     choice = st.sidebar.radio("select tasks:", EDA_tasks)
 
