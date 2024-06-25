@@ -7,3 +7,4 @@ shapely
 geopandas
 streamlit_folium
 openpyxl
+streamlit-lottie
