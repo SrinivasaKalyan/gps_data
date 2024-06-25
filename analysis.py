@@ -8,6 +8,7 @@ from shapely.geometry import Point
 import geopandas as gpd
 from math import radians, sin, cos, sqrt, atan2
 from folium.plugins import Fullscreen, MiniMap
+import requests
 
 
 
@@ -30,6 +31,9 @@ def main():
                             'Unnamed: 5': 'Speed', 'Unnamed: 4': 'Altitude', 'Unnamed: 7': 'attributes'}, inplace=True)
     st.dataframe(df.head())
     data.drop(index=[0], inplace=True)
+    url = requests.get("https://lottie.host/4d5c6dd6-efae-49a1-b6f3-560971f44d4f/zk3Xt1BQxI.json")
+    url_json = dict()
+
 
     if choice == '1.distinguish attributes':
         st.subheader(" Distinguishing attributes  :1234:")
@@ -440,6 +444,8 @@ def main():
 
                     Do check out my [LinkedIn](https://www.linkedin.com/in/kalyan-kanchumarthi-a6320a235/) and [GitHub](https://github.com/SrinivasaKalyan).
                     """)
+                st_lottie(url_json, height=300, width=300)
+
 
 
 
