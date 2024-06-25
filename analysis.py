@@ -25,7 +25,7 @@ def main():
 
     #file_format = st.radio('Select file format:', ('csv', 'excel'), key='file_format')
     #data = st.file_uploader("UPLOAD A DATASET 	:open_file_folder: ")
-    data = pd.read_excel('report5.xlsx',skiprows=7)
+    data = pd.read_excel('report (5).xlsx',skiprows=7)
 
 
     # if data:
