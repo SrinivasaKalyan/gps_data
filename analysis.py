@@ -18,7 +18,7 @@ lottie_animation = load_lottie_file("bus.json")
 
 def main():
     st.set_page_config(
-    page_title="Geo-Spatial-Insights",
+    page_title="Geo_Spatial_Insights.png",
     page_icon="pointer.png", 
     layout="wide",     
     initial_sidebar_state="auto"
